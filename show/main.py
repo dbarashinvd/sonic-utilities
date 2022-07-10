@@ -507,6 +507,50 @@ def stats(namespace, display, verbose):
 
     run_command(cmd, display_cmd=verbose)
 
+
+#
+# 'txerrmon' group ("show txerrmon ...")
+#
+
+@cli.group(cls=clicommon.AliasedGroup)
+def txerrmon():
+    """Show details of the TX Err Monitor """
+    pass
+
+# 'counters' subcommand ("show interfaces txerrors")
+@txerrmon.command()
+@click.option('--verbose', is_flag=True, help="Enable verbose output")
+def counters(verbose):
+    """Show interfaces txerrors"""
+
+    state_db = SonicV2Connector()
+    state_db.connect(state_db.STATE_DB)
+    state_table = "TX_ERR_MON_TABLE"
+    #txerrmon_state_keys = state_db.keys(state_db.STATE_DB, state_table + "*")
+    txerrmon_status = "txerrmon_status"
+    app_db = SonicV2Connector()
+    app_db.connect(app_db.APPL_DB)
+    app_table = "TX_ERR_MON_TABLE"
+    txerrmon_keys = app_db.keys(app_db.APPL_DB, app_table + "*")
+    txerrmon_stats = "txerrmon_stats"
+
+    table = []
+    for k in txerrmon_keys:
+        v = []
+        entry = app_db.get_all(app_db.APPL_DB, k)
+        if entry:
+            if txerrmon_stats in entry:
+                port = k.replace(app_table + ":", "")
+                v.append(port)
+                state = state_db.get_all(state_db.STATE_DB, state_table + "|" + port)
+                v.append(state[txerrmon_status])
+                v.append(entry[txerrmon_stats])
+        table.append(v)
+    
+    table_header = ['port', 'status', 'stats']
+    click.echo(tabulate(table, table_header))
+
+
 #
 # 'watermark' group ("show watermark telemetry interval")
 #

@@ -4599,6 +4599,82 @@ def disable_use_link_local_only(ctx, interface_name):
     interface_dict = db.get_table(interface_type)
     set_ipv6_link_local_only_on_interface(db, interface_dict, interface_type, interface_name, "disable")
 
+@interface.group()
+@click.pass_context
+def txerrmon_threshold(ctx):
+    """TX Err Monitor threshold subgroup"""
+    pass
+
+#
+# 'txerrmon_threshold' subcommand
+#
+
+@txerrmon_threshold.command()
+@click.pass_context
+@click.argument('interface_name', metavar='<interface_name>', required=True)
+@click.argument('interface_threshold', metavar='<interface_threshold>', required=True)
+def set(ctx, interface_name, interface_threshold):
+    """Set interface TX Err Monitor threshold"""
+    # Get the config_db connector
+    config_db = ctx.obj['config_db']
+
+    interface_alias = interface_name
+    if clicommon.get_interface_naming_mode() == "alias":
+        interface_name = interface_alias_to_name(config_db, interface_name)
+        if interface_name is None:
+            ctx.fail("Error: interface name derived from alias {} is None!".format(interface_alias))
+
+    if not interface_name_is_valid(config_db, interface_name):
+        ctx.fail("Error: Interface {} is invalid".format(interface_alias))
+
+    log.log_info("'interface txerrmon threshold {} {}' executing...".format(interface_name, interface_threshold))
+
+    config_db.set_entry("TX_ERR_MON", interface_name, {"tx_err_mon_orch_threshold":interface_threshold})
+
+@txerrmon_threshold.command()
+@click.pass_context
+@click.argument('interface_name', metavar='<interface_name>', required=True)
+def delete(ctx, interface_name):
+    """Delete interface TX Err Monitor threshold"""
+    # Get the config_db connector
+    config_db = ctx.obj['config_db']
+
+    interface_alias = interface_name
+    if clicommon.get_interface_naming_mode() == "alias":
+        interface_name = interface_alias_to_name(config_db, interface_name)
+        if interface_name is None:
+            ctx.fail("interface name derived from alias {} is None!".format(interface_alias))
+        
+    log.log_info("'interface txerrmon threshold {}' executing...".format(interface_name))
+    
+    if config_db.get_entry("TX_ERR_MON", interface_name):
+        config_db.set_entry("TX_ERR_MON", interface_name, None)
+    else:
+        ctx.fail("Error: TX Error monitoring for interface {} wasn't configured!".format(interface_name))            
+
+@interface.group()
+@click.pass_context
+def txerrmon_polling_period(ctx):
+    """TX Err Monitor polling period subgroup"""
+    pass
+
+#
+# 'txerrmon_polling_period' subcommand
+#
+
+@txerrmon_polling_period.command()
+@click.pass_context
+@click.argument('polling_period', metavar='<polling_period>', required=True, type=click.IntRange(1,600))
+def set(ctx, polling_period):
+    """Set interface txerrmon threshold"""
+    # Get the config_db connector
+    config_db = ctx.obj['config_db']
+
+    log.log_info("'interface txerrmon polling period {}' executing...".format(polling_period))
+
+    config_db.set_entry("TX_ERR_MON", "POLLING_PERIOD", {"tx_err_mon_orch_polling_period":polling_period})
+
+
 #
 # 'vrf' group ('config vrf ...')
 #
