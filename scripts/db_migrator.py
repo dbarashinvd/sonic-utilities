@@ -1042,6 +1042,7 @@ def main():
         namespace = args.namespace
 
         if args.namespace is not None:
+            log.log_info('calling load_sonic_global_db_config with namespace {}'.format(namespace))
             SonicDBConfig.load_sonic_global_db_config(namespace=args.namespace)
         else:
             SonicDBConfig.initialize()
