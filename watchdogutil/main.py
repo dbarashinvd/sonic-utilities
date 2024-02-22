@@ -35,7 +35,7 @@ log = logger.Logger(SYSLOG_IDENTIFIER)
 def load_platform_watchdog():
     global platform_watchdog
 
-    platform = sonic_platform.platform.Platform()
+    platform = sonic_platform.platform.Platform(False)
 
     chassis = platform.get_chassis()
     if not chassis:
